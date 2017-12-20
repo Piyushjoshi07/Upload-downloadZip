@@ -1,0 +1,171 @@
+Back End using Spring Boot 
+Model – This class contains private object, getter, setters and Mapping.  
+Employee.java
+@Entity
+@Table(name="employee")
+public class Employee implements Serializable { 
+private static final long serialVersionUID = 1L;
+	
+@Id
+@Column(name="empId")
+private long employeeId;
+
+@Column(name="empName")	
+private String employeeName;
+
+@Column(name="empDocument")
+private String employeeDocument;
+
+// Getter and setters to get and set private variable from other classes	
+	public long getEmployeeId() 
+{return employeeId;}
+	public void setEmployeeId(long employeeId) 
+{this.employeeId = employeeId;}	
+public String getEmployeeName() 
+{ return employeeName;
+}
+	public void setEmployeeName(String employeeName) 
+		{this.employeeName = employeeName;}
+	public String getEmployeeDocument() 
+{return employeeDocument;}
+	public void setEmployeeDocument(String employeeDocument) 
+{this.employeeDocument = employeeDocument;}
+}
+Repository
+EmployeeRepository.java
+
+@Repository
+public interface EmployeeRepository extends CrudRepository<Employee, String>
+{ 
+
+Employee findByEmployeeId(Long id);
+}
+Controller
+EmployeeController.java
+
+@RestController
+@RequestMapping(value="/")
+public class EmployeeController
+{
+@Autowired 
+EmployeeRepository employeeRepository; 
+
+@Autowired
+EmployeeService employeeService;
+@CrossOrigin      //allows interaction between cross domains
+@RequestMapping(value="add", method=RequestMethod.POST)
+public @ResponseBody String addEmployee(@RequestParam("employeeId") long employeeId ,@RequestParam("Name")  String Name, @RequestParam("Document") MultipartFile Document){
+Employee employee= employeeService.encoder(employeeId, Name, Document); 
+
+{
+employeeRepository.save(employee);
+return "Employee details successfully saved";
+}
+}
+@CrossOrigin 
+@RequestMapping(value="findEmployee" , method= RequestMethod.GET)
+public @ResponseBody MultipartFile findEmployee(@RequestParam("id") Long id)
+{
+Employee e1= employeeRepository.findByEmployeeId(id);
+File employeeDocument= employeeService.decoder(e1);       //service.decoder(e1); 
+return (MultipartFile) employeeDocument;
+}
+}
+Service 
+EmployeeService.java
+@Component
+public class EmployeeService {
+
+public Employee encoder(long id, String ename, MultipartFile document) {
+		Employee e1= new Employee();
+		e1.setEmployeeId(id);
+		e1.setEmployeeName(ename);
+		String eDocument= "";
+		byte[] bytes = document.getBytes();
+try {
+	byte[] bytes = document.getBytes();
+		      eDocument = Base64.getEncoder().encodeToString(bytes);
+			e1.setEmployeeDocument(eDocument);
+return e1;
+}
+		    catch (FileNotFoundException e) 
+		       { System.out.println("Document not found" + e);}
+		    catch (IOException ioe) {
+		       { System.out.println("Exception while reading the file " + ioe);}
+		   return null;
+			           
+ }
+return null;
+}
+public static File decoder (Employee e2)
+{
+String eDocument= e2.getEmployeeDocument();
+String documentName= (e2.getEmployeeName());
+try (BufferedOutputStream buff = new BufferedOutputStream(new FileOutputStream(documentName.zip), 4096)) {
+    out.write(byteArray);
+return documentName.zip;
+}
+   catch (IOException ioe) {
+ { System.out.println("Exception while writing the file " + ioe);}
+
+}
+return null;
+
+}
+}
+Orcale PL/SQL
+CREATE TABLE employee (
+  empId LONG(10) PRIMARY KEY,
+         empName VARCHAR2(15) NOT NULL,
+empDocument VARCHAR2(4000)
+);
+
+Front End using Angular JS
+<html>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+<script> 
+var app= angular.module('myApp',[]);
+app.controller("myctrl", function($scope, $http)
+{
+$scope.addDetails=function(){
+$http({
+    url: http://localhost:8080/add, 
+    method: "POST",
+    params: {employeeId: $scope.empId,name:empName,employeeDocument: $scope.empDoc}
+ });
+
+});
+$scope.searchDetails=function(){
+$http({
+    url: http://localhost:8080/findEmployee, 
+    method: "GET",
+    params: {employeeId: $scope.emplId}
+ }).success(function(data) {
+                var file = new Blob([ data ], {
+                });
+                var fileURL = URL.createObjectURL(file);
+}
+}
+});
+</script>
+</script>
+	<head><title>Employee Information</title>
+</head>
+<body>
+<h1>Employee Portal</h1>
+<form ng-app="myApp" name="myForm" ng-controller="myctrl">
+    
+	Employee ID:<br><input type="number" name="employeeId" ng-model="empId"><br>
+    Employee Name:<br> <input type="text" name="employeeName" ng-model="empName"><br>
+	 Select Document: <input type="file" name="Document" ng-model="empDoc"><br>
+   
+    <button ng-click="addDetails">
+    Submit</button>
+
+</form>
+<br><br><form ng-controller="myctrl">Search Employee by ID:<br><input type ="number" name="empId" ng-model="emplId">
+<button ng-click="searchDetails">Search</button></form><br>
+Link to your File : <a href="{{fileURL}}">
+</body>
+</html>
